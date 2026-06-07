@@ -1,99 +1,353 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login to Sheets</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
-      display: flex;
-      justify-content: center;
-      padding-top: 100px;
-      margin: 0;
-    }
-    .login-box {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 300px;
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #1a73e8;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover { 
-      background: #1557b0; 
-    }
-    #msg { 
-      margin-top: 10px; 
-      text-align: center; 
-      font-size: 14px;
-    }
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ludo Pro</title>
+<style>
+body {
+  font-family: 'Segoe UI', Arial;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #0f172a;
+  color: white;
+  margin: 0;
+  padding: 10px;
+}
+h1 { margin: 10px; color: #f8fafc; text-shadow: 0 0 10px #38bdf8; }
+#board {
+  display: grid;
+  grid-template-columns: repeat(15, 24px);
+  grid-template-rows: repeat(15, 24px);
+  gap: 1px;
+  background: #1e293b;
+  padding: 6px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(56,189,248,0.3);
+}
+.cell {
+  width: 24px;
+  height: 24px;
+  background: #f8fafc;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  position: relative;
+}
+.cell.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.cell.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.cell.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.cell.yellow { background: linear-gradient(135deg, #eab308, #ca8a04); color: #000; }
+.cell.safe::after {
+  content: "★";
+  color: gold;
+  font-size: 14px;
+  text-shadow: 0 0 5px gold;
+}
+.pawn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid white;
+  cursor: pointer;
+  position: absolute;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  transition: transform 0.2s;
+}
+.pawn:hover { transform: scale(1.2); }
+.pawn.red { background: radial-gradient(circle, #f87171, #ef4444); }
+.pawn.blue { background: radial-gradient(circle, #60a5fa, #3b82f6); }
+.pawn.green { background: radial-gradient(circle, #4ade80, #22c55e); }
+.pawn.yellow { background: radial-gradient(circle, #facc15, #eab308); }
+.pawn.active { box-shadow: 0 0 15px white; animation: pulse 0.5s infinite alternate; }
+@keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+.controls { margin: 15px; text-align: center; }
+#dice {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  color: #0f172a;
+  font-size: 42px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  margin: 10px auto;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+#dice:active { transform: scale(0.95); }
+#dice.disabled { opacity: 0.5; cursor: not-allowed; }
+#turn { font-size: 22px; margin: 10px; font-weight: bold; }
+.players {
+  display: flex;
+  gap: 15px;
+  margin: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.player {
+  padding: 8px 15px;
+  border-radius: 10px;
+  font-weight: bold;
+  background: #1e293b;
+  border: 2px solid transparent;
+}
+.player.active { border-color: white; box-shadow: 0 0 10px white; }
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #38bdf8;
+  color: #0f172a;
+  cursor: pointer;
+  font-weight: bold;
+}
+button:hover { background: #0ea5e9; }
+</style>
 </head>
 <body>
-  <div class="login-box">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <input type="text" id="username" placeholder="Username" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit">Submit</button>
-    </form>
-    <p id="msg"></p>
+
+<h1>Ludo Pro</h1>
+<div id="turn">🔴 Red's turn</div>
+
+<div id="board"></div>
+
+<div class="controls">
+  <div id="dice" onclick="rollDice()">🎲</div>
+  <div>Dice: <span id="diceValue">-</span></div>
+  <div class="players">
+    <div class="player red active" id="pRed">Red: 0/4</div>
+    <div class="player blue" id="pBlue">Blue: 0/4</div>
+    <div class="player green" id="pGreen">Green: 0/4</div>
+    <div class="player yellow" id="pYellow">Yellow: 0/4</div>
   </div>
+  <button onclick="resetGame()">New Game</button>
+</div>
 
-  <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxeJXCIFJX5AM43g5o2twnB_dOa0z_MZ62qMg0KLUXRv6xVmdX2GlD0oHHha0OvvGNTEQ/exec';
-    const form = document.getElementById('loginForm');
-    const msg = document.getElementById('msg');
+<script>
+const colors = ['red','blue','green','yellow'];
+const startPos = {red: 0, blue: 13, green: 26, yellow: 39};
+const safeSpots = [0,8,13,21,26,34,39,47];
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      msg.textContent = 'Submitting...';
-      msg.style.color = '#333';
-      
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: document.getElementById('username').value,
-          password: document.getElementById('password').value
-        })
-      })
-      .then(() => {
-        msg.textContent = 'Data sent Successfully';
-        msg.style.color = 'green';
-        form.reset();
-      })
-      .catch(error => {
-        msg.textContent = 'Error: ' + error.message;
-        msg.style.color = 'red';
-      });
+let pawns = {};
+colors.forEach(c=>{
+  pawns[c] = [
+    {pos:-1, home:0}, {pos:-1, home:1},
+    {pos:-1, home:2}, {pos:-1, home:3}
+  ];
+});
+
+let currentPlayer = 0;
+let diceValue = 0;
+let canRoll = true;
+let gameOver = false;
+
+const trackCoords = [
+  [6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0]
+];
+
+const homePaths = {
+  red: [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],
+  blue: [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],
+  green: [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]],
+  yellow: [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]]
+};
+
+function initBoard() {
+  const boardDiv = document.getElementById('board');
+  boardDiv.innerHTML = '';
+
+  for(let y=0; y<15; y++) {
+    for(let x=0; x<15; x++) {
+      const div = document.createElement('div');
+      div.className = 'cell';
+      div.id = `cell-${y}-${x}`;
+
+      if(x<6 && y<6) div.classList.add('red');
+      else if(x>8 && y<6) div.classList.add('blue');
+      else if(x<6 && y>8) div.classList.add('green');
+      else if(x>8 && y>8) div.classList.add('yellow');
+      else if(x>=6 && x<=8 && y>=6 && y<=8) div.style.background = '#334155';
+
+      const trackIndex = trackCoords.findIndex(([ty,tx])=>ty===y && tx===x);
+      if(trackIndex!==-1 && safeSpots.includes(trackIndex)) {
+        div.classList.add('safe');
+      }
+
+      boardDiv.appendChild(div);
+    }
+  }
+  updateBoard();
+}
+
+function updateBoard() {
+  colors.forEach(c=>{
+    const homeCount = pawns[c].filter(p=>p.pos>=52).length;
+    document.getElementById('p'+c[0].toUpperCase()+c.slice(1)).textContent =
+      `${c[0].toUpperCase()+c.slice(1)}: ${homeCount}/4`;
+  });
+
+  document.querySelectorAll('.pawn').forEach(p=>p.remove());
+
+  colors.forEach(color=>{
+    pawns[color].forEach(pawn=>{
+      let x,y;
+
+      if(pawn.pos===-1) {
+        // FIXED: [y,x] format matches board coloring
+        const baseCoords = {
+          red: [[2,2],[3,2],[2,3],[3,3]], // top-left
+          blue: [[2,11],[3,11],[2,12],[3,12]], // top-right
+          green: [[11,2],[12,2],[11,3],[12,3]], // bottom-left
+          yellow: [[11,11],[12,11],[11,12],[12,12]] // bottom-right FIXED
+        };
+        [y,x] = baseCoords[color][pawn.home];
+      }
+      else if(pawn.pos<52) {
+        [y,x] = trackCoords[(startPos[color] + pawn.pos) % 52];
+      } else {
+        [y,x] = homePaths[color][pawn.pos-52];
+      }
+
+      const cell = document.getElementById(`cell-${y}-${x}`);
+      if(cell) {
+        const pawnDiv = document.createElement('div');
+        pawnDiv.className = `pawn ${color}`;
+        if(color===colors[currentPlayer] && canRoll===false) pawnDiv.classList.add('active');
+        pawnDiv.onclick = ()=>movePawn(color, pawn.home);
+        cell.appendChild(pawnDiv);
+      }
     });
-  </script>
+  });
+}
+
+function rollDice() {
+  if(!canRoll || gameOver) return;
+
+  canRoll = false;
+  document.getElementById('dice').classList.add('disabled');
+
+  let count = 0;
+  const interval = setInterval(()=>{
+    diceValue = Math.floor(Math.random()*6)+1;
+    document.getElementById('diceValue').textContent = diceValue;
+    count++;
+    if(count>12) {
+      clearInterval(interval);
+      processDice();
+    }
+  }, 80);
+}
+
+function processDice() {
+  const color = colors[currentPlayer];
+  const movablePawns = pawns[color].filter(p=>{
+    if(p.pos===-1) return diceValue===6;
+    if(p.pos>=52) return p.pos+diceValue<=58;
+    return p.pos+diceValue<=58;
+  });
+
+  if(movablePawns.length===0) {
+    nextTurn();
+    return;
+  }
+
+  if(movablePawns.length===1) {
+    movePawn(color, movablePawns[0].home);
+  } else {
+    document.getElementById('turn').textContent = `${color.toUpperCase()} - click a pawn`;
+    updateBoard();
+    canRoll = true;
+  }
+}
+
+function movePawn(color, pawnIndex) {
+  if(color!==colors[currentPlayer] || gameOver) return;
+
+  const pawn = pawns[color][pawnIndex];
+
+  if(pawn.pos===-1) {
+    if(diceValue!==6) return;
+    pawn.pos = 0;
+  } else {
+    const newPos = pawn.pos + diceValue;
+    if(newPos>58) return;
+    pawn.pos = newPos;
+  }
+
+  if(pawn.pos<52) {
+    const actualPos = (startPos[color] + pawn.pos) % 52;
+    if(!safeSpots.includes(actualPos)) {
+      colors.forEach(c=>{
+        if(c===color) return;
+        pawns[c].forEach(op=>{
+          if(op.pos<52) {
+            const opActual = (startPos[c] + op.pos) % 52;
+            if(opActual===actualPos) op.pos = -1;
+          }
+        });
+      });
+    }
+  }
+
+  updateBoard();
+  checkWin();
+
+  if(diceValue===6 &&!gameOver) {
+    canRoll = true;
+    document.getElementById('dice').classList.remove('disabled');
+    document.getElementById('turn').textContent = `${color.toUpperCase()} rolled 6 - roll again 🎲`;
+  } else {
+    nextTurn();
+  }
+}
+
+function nextTurn() {
+  currentPlayer = (currentPlayer+1)%4;
+  canRoll = true;
+  diceValue = 0;
+  document.getElementById('diceValue').textContent = '-';
+  document.getElementById('dice').classList.remove('disabled');
+
+  const emoji = ['🔴','🔵','🟢','🟡'][currentPlayer];
+  document.getElementById('turn').textContent = `${emoji} ${colors[currentPlayer].toUpperCase()}'s turn`;
+
+  document.querySelectorAll('.player').forEach(p=>p.classList.remove('active'));
+  document.getElementById('p'+colors[currentPlayer][0].toUpperCase()+colors[currentPlayer].slice(1)).classList.add('active');
+}
+
+function checkWin() {
+  colors.forEach(color=>{
+    if(pawns[color].every(p=>p.pos>=52)) {
+      gameOver = true;
+      const emoji = ['🔴','🔵','🟢','🟡'][currentPlayer];
+      document.getElementById('turn').textContent = `${emoji} ${color.toUpperCase()} WINS! 👑`;
+    }
+  });
+}
+
+function resetGame() {
+  colors.forEach(c=>{
+    pawns[c].forEach(p=>{ p.pos = -1; });
+  });
+  currentPlayer = 0;
+  gameOver = false;
+  canRoll = true;
+  diceValue = 0;
+  initBoard();
+  document.getElementById('diceValue').textContent = '-';
+  document.getElementById('turn').textContent = '🔴 RED\'s turn';
+}
+
+initBoard();
+</script>
 </body>
 </html>
