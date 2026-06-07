@@ -85,6 +85,7 @@ h1 {
 .pawn.green { background: radial-gradient(circle, #4ade80, #22c55e); }
 .pawn.yellow { background: radial-gradient(circle, #facc15, #eab308); }
 .pawn.active { box-shadow: 0 0 15px white; animation: pulse 0.5s infinite alternate; }
+.pawn.blocked { opacity: 0.5; cursor: not-allowed; }
 
 @keyframes pulse { 
   from { transform: scale(1); } 
@@ -346,6 +347,42 @@ const homePaths = {
   yellow: [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]]
 };
 
+function canMovePawn(color, pawnIndex, newPos) {
+  // Check if path is blocked by same color pawn
+  if(newPos < 52) {
+    // Check all positions from current to new position
+    const pawn = pawns[color][pawnIndex];
+    const currentPos = pawn.pos;
+    
+    for(let step = currentPos + 1; step <= newPos; step++) {
+      const checkPos = (startPos[color] + step) % 52;
+      
+      // Check if any pawn of same color is on this position
+      for(let i = 0; i < pawns[color].length; i++) {
+        if(i === pawnIndex) continue;
+        const otherPawn = pawns[color][i];
+        
+        if(otherPawn.pos >= 0 && otherPawn.pos < 52) {
+          const otherPos = (startPos[color] + otherPawn.pos) % 52;
+          if(otherPos === checkPos) return false;
+        }
+      }
+    }
+  } else if(newPos >= 52) {
+    // Check home path
+    for(let step = currentPos >= 52 ? currentPos - 52 + 1 : 1; step <= newPos - 52; step++) {
+      for(let i = 0; i < pawns[color].length; i++) {
+        if(i === pawnIndex) continue;
+        const otherPawn = pawns[color][i];
+        
+        if(otherPawn.pos >= 52 && otherPawn.pos - 52 === step - 1) return false;
+      }
+    }
+  }
+  
+  return true;
+}
+
 function initBoard() {
   const boardDiv = document.getElementById('board');
   boardDiv.innerHTML = '';
@@ -383,7 +420,7 @@ function updateBoard() {
   document.querySelectorAll('.pawn').forEach(p=>p.remove());
 
   colors.forEach(color=>{
-    pawns[color].forEach(pawn=>{
+    pawns[color].forEach((pawn, pawnIndex)=>{
       let x,y;
 
       if(pawn.pos===-1) {
@@ -405,8 +442,16 @@ function updateBoard() {
       if(cell) {
         const pawnDiv = document.createElement('div');
         pawnDiv.className = `pawn ${color}`;
-        if(color===colors[currentPlayer] && canRoll===false) pawnDiv.classList.add('active');
-        pawnDiv.onclick = ()=>movePawn(color, pawn.home);
+        
+        const isActive = color===colors[currentPlayer] && canRoll===false;
+        const isBlocked = isActive && !canMovePawn(color, pawnIndex, pawn.pos + diceValue);
+        
+        if(isActive) pawnDiv.classList.add('active');
+        if(isBlocked) pawnDiv.classList.add('blocked');
+        
+        if(!isBlocked) {
+          pawnDiv.onclick = ()=>movePawn(color, pawnIndex);
+        }
         cell.appendChild(pawnDiv);
       }
     });
@@ -435,10 +480,10 @@ function processDice() {
   const color = colors[currentPlayer];
   lastDiceRoll[color] = diceValue;
   
-  const movablePawns = pawns[color].filter(p=>{
+  const movablePawns = pawns[color].filter((p, idx)=>{
     if(p.pos===-1) return diceValue===6;
     if(p.pos>=52) return p.pos+diceValue<=58;
-    return p.pos+diceValue<=58;
+    return p.pos+diceValue<=58 && canMovePawn(color, idx, p.pos+diceValue);
   });
 
   if(movablePawns.length===0) {
@@ -447,7 +492,8 @@ function processDice() {
   }
 
   if(movablePawns.length===1) {
-    movePawn(color, movablePawns[0].home);
+    const pawnIndex = pawns[color].findIndex(p => movablePawns.includes(p));
+    movePawn(color, pawnIndex);
   } else {
     document.getElementById('turn').textContent = `${color.toUpperCase()} - click a pawn`;
     updateBoard();
@@ -459,13 +505,13 @@ function movePawn(color, pawnIndex) {
   if(color!==colors[currentPlayer] || gameOver) return;
 
   const pawn = pawns[color][pawnIndex];
+  const newPos = pawn.pos === -1 ? 0 : pawn.pos + diceValue;
 
   if(pawn.pos===-1) {
     if(diceValue!==6) return;
     pawn.pos = 0;
   } else {
-    const newPos = pawn.pos + diceValue;
-    if(newPos>58) return;
+    if(newPos>58 || !canMovePawn(color, pawnIndex, newPos)) return;
     pawn.pos = newPos;
   }
 
