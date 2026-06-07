@@ -4,38 +4,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ludo Pro</title>
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Segoe UI', Arial;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   background: #0f172a;
   color: white;
   margin: 0;
   padding: 10px;
+  min-height: 100vh;
 }
-h1 { margin: 10px; color: #f8fafc; text-shadow: 0 0 10px #38bdf8; }
+
+h1 { 
+  margin: 10px 0; 
+  color: #f8fafc; 
+  text-shadow: 0 0 10px #38bdf8;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+}
+
 #board {
   display: grid;
-  grid-template-columns: repeat(15, 24px);
-  grid-template-rows: repeat(15, 24px);
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(15, 1fr);
   gap: 1px;
   background: #1e293b;
-  padding: 6px;
+  padding: clamp(6px, 3vw, 12px);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(56,189,248,0.3);
+  aspect-ratio: 1;
+  width: clamp(250px, 90vw, 600px);
+  max-width: 600px;
 }
+
 .cell {
-  width: 24px;
-  height: 24px;
+  aspect-ratio: 1;
   background: #f8fafc;
   border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: clamp(8px, 2vw, 12px);
   position: relative;
+  min-width: 16px;
+  min-height: 16px;
 }
+
 .cell.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
 .cell.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 .cell.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
@@ -43,12 +62,13 @@ h1 { margin: 10px; color: #f8fafc; text-shadow: 0 0 10px #38bdf8; }
 .cell.safe::after {
   content: "★";
   color: gold;
-  font-size: 14px;
+  font-size: 1.2em;
   text-shadow: 0 0 5px gold;
 }
+
 .pawn {
-  width: 16px;
-  height: 16px;
+  width: clamp(12px, 4vw, 20px);
+  height: clamp(12px, 4vw, 20px);
   border-radius: 50%;
   border: 2px solid white;
   cursor: pointer;
@@ -56,80 +76,216 @@ h1 { margin: 10px; color: #f8fafc; text-shadow: 0 0 10px #38bdf8; }
   box-shadow: 0 2px 5px rgba(0,0,0,0.4);
   transition: transform 0.2s;
 }
+
 .pawn:hover { transform: scale(1.2); }
+.pawn:active { transform: scale(0.95); }
+
 .pawn.red { background: radial-gradient(circle, #f87171, #ef4444); }
 .pawn.blue { background: radial-gradient(circle, #60a5fa, #3b82f6); }
 .pawn.green { background: radial-gradient(circle, #4ade80, #22c55e); }
 .pawn.yellow { background: radial-gradient(circle, #facc15, #eab308); }
 .pawn.active { box-shadow: 0 0 15px white; animation: pulse 0.5s infinite alternate; }
-@keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
 
-.controls { margin: 15px; text-align: center; }
+@keyframes pulse { 
+  from { transform: scale(1); } 
+  to { transform: scale(1.15); } 
+}
+
+.controls { 
+  margin: clamp(10px, 3vw, 20px); 
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
 #dice {
-  width: 70px;
-  height: 70px;
+  width: clamp(60px, 15vw, 80px);
+  height: clamp(60px, 15vw, 80px);
   background: linear-gradient(135deg, #f8fafc, #e2e8f0);
   color: #0f172a;
-  font-size: 42px;
+  font-size: clamp(32px, 8vw, 48px);
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 15px;
-  margin: 10px auto;
+  margin: clamp(8px, 3vw, 15px) auto;
   cursor: pointer;
   user-select: none;
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
+
 #dice:active { transform: scale(0.95); }
 #dice.disabled { opacity: 0.5; cursor: not-allowed; }
-#turn { font-size: 22px; margin: 10px; font-weight: bold; }
-.players {
-  display: flex;
-  gap: 15px;
-  margin: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+
+#turn { 
+  font-size: clamp(16px, 4vw, 24px); 
+  margin: 10px; 
+  font-weight: bold;
+  min-height: 30px;
 }
+
+#diceInfo {
+  font-size: clamp(14px, 3vw, 18px);
+  margin: 8px 0;
+}
+
+.players {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: clamp(8px, 2vw, 15px);
+  margin: clamp(8px, 2vw, 15px) 0;
+  width: 100%;
+}
+
 .player {
-  padding: 8px 15px;
+  padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 20px);
   border-radius: 10px;
   font-weight: bold;
   background: #1e293b;
   border: 2px solid transparent;
+  font-size: clamp(12px, 2.5vw, 16px);
+  transition: all 0.3s;
 }
-.player.active { border-color: white; box-shadow: 0 0 10px white; }
+
+.player.active { 
+  border-color: white; 
+  box-shadow: 0 0 10px white; 
+  background: #334155;
+}
+
 button {
-  padding: 10px 20px;
-  font-size: 16px;
-  margin-top: 10px;
+  padding: clamp(10px, 2vw, 15px) clamp(16px, 4vw, 24px);
+  font-size: clamp(14px, 3vw, 18px);
+  margin-top: clamp(8px, 2vw, 15px);
   border: none;
   border-radius: 8px;
   background: #38bdf8;
   color: #0f172a;
   cursor: pointer;
   font-weight: bold;
+  transition: background 0.3s;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
+
 button:hover { background: #0ea5e9; }
+button:active { transform: scale(0.95); }
+
+/* Mobile first - Small screens (phones) */
+@media (max-width: 480px) {
+  body {
+    padding: 8px;
+  }
+  
+  .players {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablet screens */
+@media (min-width: 481px) and (max-width: 768px) {
+  body {
+    padding: 12px;
+  }
+  
+  .players {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop screens */
+@media (min-width: 769px) {
+  body {
+    padding: 20px;
+  }
+  
+  .players {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Landscape orientation */
+@media (orientation: landscape) and (max-height: 600px) {
+  body {
+    min-height: auto;
+    padding: 5px;
+  }
+  
+  h1 {
+    margin: 5px 0;
+  }
+  
+  #board {
+    width: clamp(180px, 50vh, 400px);
+    padding: 3px;
+  }
+  
+  .controls {
+    margin: 5px;
+  }
+}
+
+/* Small landscape devices */
+@media (orientation: landscape) and (max-height: 400px) {
+  .players {
+    display: flex;
+    gap: 5px;
+    font-size: 11px;
+  }
+  
+  .player {
+    padding: 4px 8px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .pawn {
+    cursor: pointer;
+  }
+  
+  button {
+    padding: clamp(12px, 3vw, 18px) clamp(20px, 5vw, 28px);
+    min-height: 44px;
+  }
+  
+  #dice {
+    min-height: 60px;
+    min-width: 60px;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .pawn {
+    border-width: 1px;
+  }
+}
 </style>
 </head>
 <body>
 
-<h1>Ludo Pro</h1>
+<h1>🎲 Ludo Pro</h1>
 <div id="turn">🔴 Red's turn</div>
 
 <div id="board"></div>
 
 <div class="controls">
   <div id="dice" onclick="rollDice()">🎲</div>
-  <div>Dice: <span id="diceValue">-</span></div>
+  <div id="diceInfo">Dice: <span id="diceValue">-</span></div>
   <div class="players">
     <div class="player red active" id="pRed">Red: 0/4</div>
     <div class="player blue" id="pBlue">Blue: 0/4</div>
     <div class="player green" id="pGreen">Green: 0/4</div>
     <div class="player yellow" id="pYellow">Yellow: 0/4</div>
   </div>
-  <button onclick="resetGame()">New Game</button>
+  <button onclick="resetGame()">🔄 New Game</button>
 </div>
 
 <script>
@@ -151,7 +307,7 @@ let canRoll = true;
 let gameOver = false;
 
 const trackCoords = [
-  [6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0]
+  [6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0]
 ];
 
 const homePaths = {
@@ -202,12 +358,11 @@ function updateBoard() {
       let x,y;
 
       if(pawn.pos===-1) {
-        // FIXED: [y,x] format matches board coloring
         const baseCoords = {
-          red: [[2,2],[3,2],[2,3],[3,3]], // top-left
-          blue: [[2,11],[3,11],[2,12],[3,12]], // top-right
-          green: [[11,2],[12,2],[11,3],[12,3]], // bottom-left
-          yellow: [[11,11],[12,11],[11,12],[12,12]] // bottom-right FIXED
+          red: [[2,2],[3,2],[2,3],[3,3]],
+          blue: [[2,11],[3,11],[2,12],[3,12]],
+          green: [[11,2],[12,2],[11,3],[12,3]],
+          yellow: [[11,11],[12,11],[11,12],[12,12]]
         };
         [y,x] = baseCoords[color][pawn.home];
       }
@@ -344,7 +499,7 @@ function resetGame() {
   diceValue = 0;
   initBoard();
   document.getElementById('diceValue').textContent = '-';
-  document.getElementById('turn').textContent = '🔴 RED\'s turn';
+  document.getElementById('turn').textContent = '🔴 Red\'s turn';
 }
 
 initBoard();
